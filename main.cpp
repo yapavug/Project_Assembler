@@ -4,6 +4,7 @@
 #include <map>
 #include <fstream>
 #include <algorithm>
+#include <vector>
 using namespace std;
 
 const int NPNE_OPCODE = 255;
@@ -33,7 +34,40 @@ string readFile(const string& filePath) {
 }
 
 
+// Функция для разбиения строки на массив строк
+vector<string> splitIntoLines(const string& content) {
+	vector<string> lines;
+	size_t start = 0;  // Начальная позиция для поиска подстроки
+	size_t end = content.find('\n');  // Ищем первый символ новой строки
 
+	while (end != string::npos) {
+		// Извлекаем подстроку от start до end
+		string line = content.substr(start, end - start);
+		if (!line.empty()) {  // Пропускаем пустые строки
+			lines.push_back(line);
+		}
+		start = end + 1;  // Перемещаем start на позицию после '\n'
+		end = content.find('\n', start);  // Ищем следующий символ новой строки
+	}
+
+	// Добавляем последнюю строку, если она есть
+	if (start < content.length()) {
+		string line = content.substr(start);
+		if (!line.empty()) {
+			lines.push_back(line);
+		}
+	}
+
+	return lines;
+}
+
+
+
+map<string, int> findLabels(const string& fileContent) {
+	
+
+
+}
 
 
 int main()
@@ -86,7 +120,13 @@ int main()
 
 	std::cout << "Содержимое файла:\n" << fileContent << std::endl;
 
+	//// Находим метки в файле
+	//map<string, int> labels = findLabels(fileContent);
 
+	//// Выводим найденные метки и их позиции
+	//for (const auto& label : labels) {
+	//	cout << "Метка: " << label.first << ", Строка: " << label.second << endl;
+	//}
 
 	return 0;
 }

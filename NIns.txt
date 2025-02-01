@@ -1,0 +1,26 @@
+mov r0 data_memory 0
+load r1 [r0] 0
+mov r2 1 0
+add r3 r0 r2
+load rax [r3] 0
+mov rcx r1 0
+dec rcx rcx 0
+
+loop_start:
+cmp rcx 0 0
+je loop_end
+
+add r3 1 0
+load rbx [r3] 0
+cmp rbx rax 0
+jle next_element
+mov rax rbx 0
+
+next_element:
+dec rcx rcx 0
+jmp loop_start
+
+loop_end:
+mov rdi rax 0
+mov rax 60 0
+hlt

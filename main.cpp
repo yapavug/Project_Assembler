@@ -9,65 +9,56 @@ using namespace std;
 
 const int NPNE_OPCODE = 255;
 
-string readFile(const string& filePath) {
-	ifstream file(filePath);  // Открываем файл для чтения
-	string content;
 
-	if (file.is_open()) {
-		// Читаем содержимое файла в строку
-		string line;
-		while (getline(file, line)) {
-			// Удаляем двоеточия из строки
-			//line.erase(remove(line.begin(), line.end(), ':'), line.end());
 
-			// Пропускаем пустые строки
-			if (!line.empty()) {
-				content += line + "\n";  // Добавляем строку в content
-			}
+void printAsmFile(const string& filename) {
+	// Открываем файл для чтения
+	ifstream file(filename);
+
+	// Проверяем, удалось ли открыть файл
+	if (!file.is_open()) {
+		cerr << "Ошибка: не удалось открыть файл " << filename << endl;
+		return;
+	}
+
+	// Для хранения меток и их строк
+	map<string, int> labels;
+	int lineNumber = 0; // Счётчик строк
+
+	// Читаем файл построчно и выводим его содержимое
+	string line;
+	while (getline(file, line)) {
+
+		// Удаляем ведущие пробелы
+		line.erase(0, line.find_first_not_of(' '));
+
+		// Пропускаем пустые строки и строки, начинающиеся с #
+		if (line.empty() || line[0] == '#') {
+			continue;
 		}
-		file.close();  // Закрываем файл
+
+		lineNumber++; // Увеличиваем счётчик строк
+
+		// Проверяем, является ли строка меткой
+		if (line.back() == ':') { // Метка заканчивается на ':'
+			string label = line.substr(0, line.size() - 1); // Убираем ':'
+			labels[label] = lineNumber; // Запоминаем метку и номер строки
+			--lineNumber;
+		}
+
+		cout << line << endl;
 	}
-	else {
-		cerr << "Не удалось открыть файл: " << filePath << endl;
+
+	// Закрываем файл
+	file.close();
+
+	// Выводим информацию о метках
+	cout << "\nМетки и их строки:\n";
+	for (const auto& pair : labels) {
+		cout << "Метка: " << pair.first << ", Строка: " << pair.second << endl;
 	}
-	return content;
 }
 
-
-// Функция для разбиения строки на массив строк
-vector<string> splitIntoLines(const string& content) {
-	vector<string> lines;
-	size_t start = 0;  // Начальная позиция для поиска подстроки
-	size_t end = content.find('\n');  // Ищем первый символ новой строки
-
-	while (end != string::npos) {
-		// Извлекаем подстроку от start до end
-		string line = content.substr(start, end - start);
-		if (!line.empty()) {  // Пропускаем пустые строки
-			lines.push_back(line);
-		}
-		start = end + 1;  // Перемещаем start на позицию после '\n'
-		end = content.find('\n', start);  // Ищем следующий символ новой строки
-	}
-
-	// Добавляем последнюю строку, если она есть
-	if (start < content.length()) {
-		string line = content.substr(start);
-		if (!line.empty()) {
-			lines.push_back(line);
-		}
-	}
-
-	return lines;
-}
-
-
-
-map<string, int> findLabels(const string& fileContent) {
-	
-
-
-}
 
 
 int main()
@@ -84,10 +75,10 @@ int main()
 		data_memory[i] = initial_data[i];
 	}
 
-	for (auto elem : data_memory)
-	{
-		cout << elem << endl;
-	}
+	//for (auto elem : data_memory)
+	//{
+	//	cout << elem << endl;
+	//}
 
 	map<string, int> OPCODES;
 	OPCODES["mov"] = 1;
@@ -115,18 +106,12 @@ int main()
 	REGISTERS["rcx"] = 15;
 	REGISTERS["rdi"] = 16;
 
-	std::string filePath = "NIns.txt";
-	std::string fileContent = readFile(filePath);
+	string filePath = "NIns.txt";
+	printAsmFile(filePath);
 
-	std::cout << "Содержимое файла:\n" << fileContent << std::endl;
 
-	//// Находим метки в файле
-	//map<string, int> labels = findLabels(fileContent);
 
-	//// Выводим найденные метки и их позиции
-	//for (const auto& label : labels) {
-	//	cout << "Метка: " << label.first << ", Строка: " << label.second << endl;
-	//}
+
 
 	return 0;
 }

@@ -6,25 +6,25 @@
 #include <algorithm>
 #include <vector>
 #include <sstream>
-using namespace std;
+
 
 const int NONE_OPCODE = 255;
 
 
-void labelsFind(const string& filename, map<string, int>& labels, string& result) {
+void labelsFind(const std::string& filename, std::map<std::string, int>& labels, std::string& result) {
 	// Открываем файл для чтения
-	ifstream file(filename);
+	std::ifstream file(filename);
 
 	// Проверяем, удалось ли открыть файл
 	if (!file.is_open()) {
-		cerr << "Ошибка: не удалось открыть файл " << filename << endl;
+		std::cerr << "Ошибка: не удалось открыть файл " << filename << std::endl;
 		return;
 	}
 
 	int lineNumber = 0; // Счётчик строк
 
 	// Читаем файл построчно и выводим его содержимое
-	string line;
+	std::string line;
 	while (getline(file, line)) {
 
 		// Удаляем ведущие пробелы
@@ -39,7 +39,7 @@ void labelsFind(const string& filename, map<string, int>& labels, string& result
 
 		// Проверяем, является ли строка меткой
 		if (line.back() == ':') { // Метка заканчивается на ':'
-			string label = line.substr(0, line.size() - 1); // Убираем ':'
+			std::string label = line.substr(0, line.size() - 1); // Убираем ':'
 			labels[label] = lineNumber; // Запоминаем метку и номер строки
 			--lineNumber;
 		}
@@ -52,15 +52,16 @@ void labelsFind(const string& filename, map<string, int>& labels, string& result
 	file.close();
 
 	// Выводим информацию о метках
-	cout << "\nМетки и их строки:\n";
+	std::cout << "\nМетки и их строки:\n";
 	for (const auto& pair : labels) {
-		cout << "Метка: " << pair.first << ", Строка: " << pair.second << endl;
+		std::cout << "Метка: " << pair.first << ", Строка: " << pair.second << std::endl;
 	}
 }
 
 
 // Функция для ассемблирования команды
-vector<int> assembleInstruction(const vector<string>& instruction, const map<string, int>& OPCODES, const map<string, int>& REGISTERS, const map<string, int>& SPECIAL_VALUES, const map<string, int>& label_addresses) {
+std::vector<int> assembleInstruction(const std::vector<std::string>& instruction, const std::map<std::string, int>& OPCODES, const std::map<std::string, int>& REGISTERS
+	, const std::map<std::string, int>& SPECIAL_VALUES, const std::map<std::string, int>& label_addresses) {
 	// Особый случай для команды hlt
 	if (instruction[0] == "hlt") {
 		return { OPCODES.at("hlt"), NONE_OPCODE, NONE_OPCODE, NONE_OPCODE };
@@ -74,14 +75,14 @@ vector<int> assembleInstruction(const vector<string>& instruction, const map<str
 	// Получаем opcode
 	auto opcode_it = OPCODES.find(instruction[0]);
 	if (opcode_it == OPCODES.end()) {
-		throw runtime_error("Неизвестная команда: " + instruction[0]);
+		throw std::runtime_error("Неизвестная команда: " + instruction[0]);
 	}
 	int opcode = opcode_it->second;
 
 	// Обрабатываем операнды
-	vector<int> operands;
+	std::vector<int> operands;
 	for (size_t i = 1; i < instruction.size(); ++i) {
-		const string& operand = instruction[i];
+		const std::string& operand = instruction[i];
 
 		// Если операнд — регистр
 		auto reg_it = REGISTERS.find(operand);
@@ -90,20 +91,20 @@ vector<int> assembleInstruction(const vector<string>& instruction, const map<str
 		}
 		// Если операнд — косвенная адресация (например, [r1])
 		else if (operand.front() == '[' && operand.back() == ']') {
-			string reg = operand.substr(1, operand.size() - 2);
+			std::string reg = operand.substr(1, operand.size() - 2);
 			auto reg_indirect_it = REGISTERS.find(reg);
 			if (reg_indirect_it != REGISTERS.end()) {
 				operands.push_back(reg_indirect_it->second + 100); // Добавляем смещение для косвенной адресации
 			}
 			else {
-				throw runtime_error("Неизвестный регистр: " + reg);
+				throw std::runtime_error("Неизвестный регистр: " + reg);
 			}
 		}
 		// Если операнд — число
 		else if (all_of(operand.begin(), operand.end(), ::isdigit)) {
 			int value = stoi(operand);
 			if (value < 0 || value > 85) {
-				throw runtime_error("Непосредственное значение " + operand + " выходит за пределы диапазона (0–85)");
+				throw std::runtime_error("Непосредственное значение " + operand + " выходит за пределы диапазона (0–85)");
 			}
 			if (value == 0) {
 				operands.push_back(value + NONE_OPCODE); // Добавляем смещение при случае, когда операнд == 0
@@ -128,7 +129,7 @@ vector<int> assembleInstruction(const vector<string>& instruction, const map<str
 		}
 		// Неизвестный операнд
 		else {
-			throw runtime_error("Неизвестный операнд: " + operand);
+			throw std::runtime_error("Неизвестный операнд: " + operand);
 		}
 	}
 
@@ -138,10 +139,41 @@ vector<int> assembleInstruction(const vector<string>& instruction, const map<str
 	}
 
 	// Формируем машинную инструкцию
-	vector<int> machineCode = { opcode };
+	std::vector<int> machineCode = { opcode };
 	machineCode.insert(machineCode.end(), operands.begin(), operands.end());
 
 	return machineCode;
+}
+
+
+// Функция для записи машинного кода в файл
+void writeMachineCodeToFile(const std::vector<std::vector<int>>& program, const std::string& filename) {
+	std::ofstream file(filename); // Открываем файл для записи
+
+	if (!file.is_open()) {
+		std::cerr << "Ошибка: не удалось открыть файл " << filename << " для записи." << std::endl;
+		return;
+	}
+
+	// Проходим по всем машинным инструкциям
+	for (const auto& instruction : program) {
+		// Пропускаем пустые инструкции (например, метки)
+		if (instruction.empty()) {
+			continue;
+		}
+
+		// Записываем каждый байт инструкции в файл
+		for (size_t i = 0; i < instruction.size(); ++i) {
+			file << instruction[i];
+			if (i < instruction.size() - 1) {
+				file << " "; // Добавляем пробел между байтами
+			}
+		}
+		file << std::endl; // Переходим на новую строку для следующей инструкции
+	}
+
+	file.close(); // Закрываем файл
+	std::cout << "Машинный код успешно записан в файл " << filename << std::endl;
 }
 
 
@@ -151,7 +183,7 @@ int main()
 
 	setlocale(LC_ALL, "ru");
 
-	array<int, 2048> data_mem = { 0 };
+	std::array<int, 2048> data_mem = { 0 };
 	
 	int initial_data[] = {10, 15, 21, 28, 29, 33, 88, 45, 47, 97, 99};
 
@@ -160,12 +192,12 @@ int main()
 		data_mem[i] = initial_data[i];
 	}
 
-	//for (auto elem : data_memory)
+	//for (auto elem : data_mem)
 	//{
 	//	cout << elem << endl;
 	//}
 
-	map<string, int> OPCODES;
+	std::map<std::string, int> OPCODES;
 	OPCODES["mov"] = 1;
 	OPCODES["add"] = 2;
 	OPCODES["sub"] = 3;
@@ -179,7 +211,7 @@ int main()
 
 
 
-	map<string, int> REGISTERS;
+	std::map<std::string, int> REGISTERS;
 	REGISTERS["r0"] = 7;
 	REGISTERS["r1"] = 8;
 	REGISTERS["r2"] = 9;
@@ -191,27 +223,27 @@ int main()
 	REGISTERS["rcx"] = 15;
 	REGISTERS["rdi"] = 16;
 
-	map<string, int> SPECIAL_VALUES = { {"data_memory", 0} };
+	std::map<std::string, int> SPECIAL_VALUES = { {"data_memory", 0} };
 
-	string filePath = "NIns.txt";
+	std::string filePath = "NIns.txt";
 
 	//Для хранения "очищенного" содержимого файла
-	string result;
+	std::string result;
 
 	// Для хранения меток и их строк
-	map<string, int> labels;
+	std::map<std::string, int> labels;
 
 	labelsFind(filePath, labels, result);
 
-	cout << endl << "RESULT:\n" << result << endl;
+	std::cout << std::endl << "RESULT:\n" << result << std::endl;
 
 	// вектор для хранения строк
-	vector<string> lines;
+	std::vector<std::string> lines;
 
 	// разбиваем строку на подстроки
 	size_t start = 0;
 	size_t end = result.find('\n');
-	while (end != string::npos) {
+	while (end != std::string::npos) {
 		lines.push_back(result.substr(start, end - start)); // добавляем строку в вектор
 		start = end + 1; // переходим к следующей строке
 		end = result.find('\n', start); // ищем следующий символ '\n'
@@ -224,11 +256,11 @@ int main()
 
 
 	// Вектор для хранения машинного кода
-	vector<vector<int>> program;
+	std::vector<std::vector<int>> program;
 
 	// Обрабатываем каждую строку
 	for (size_t i = 0; i < lines.size(); ++i) {
-		string line = lines[i];
+		std::string line = lines[i];
 		line.erase(0, line.find_first_not_of(' ')); // Удаляем ведущие пробелы
 
 		if (line.empty() || line[0] == '#') {
@@ -236,32 +268,29 @@ int main()
 		}
 
 		// Разбиваем строку на команду и операнды
-		istringstream iss(line);
-		vector<string> instruction;
-		string token;
+		std::istringstream iss(line);
+		std::vector<std::string> instruction;
+		std::string token;
 		while (iss >> token) {
 			instruction.push_back(token);
 		}
 
 		try {
 			// Ассемблируем команду
-			vector<int> machineCode = assembleInstruction(instruction, OPCODES, REGISTERS, SPECIAL_VALUES, labels);
+			std::vector<int> machineCode = assembleInstruction(instruction, OPCODES, REGISTERS, SPECIAL_VALUES, labels);
 			program.push_back(machineCode); // Сохраняем машинный код
-			cout << "Машинный код для строки " << i + 1 << ": ";
+			std::cout << "Машинный код для строки " << i + 1 << ": ";
 			for (int byte : machineCode) {
-				cout << byte << " ";
+				std::cout << byte << " ";
 			}
-			cout << endl;
+			std::cout << std::endl;
 		}
-		catch (const exception& e) {
-			cerr << "Ошибка в строке " << i + 1 << ": " << e.what() << endl;
+		catch (const std::exception& e) {
+			std::cerr << "Ошибка в строке " << i + 1 << ": " << e.what() << std::endl;
 		}
 	}
 
-
-
-
-
+	writeMachineCodeToFile(program, "machine_code.txt");
 
 	return 0;
 }

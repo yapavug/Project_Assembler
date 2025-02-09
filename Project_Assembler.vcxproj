@@ -127,7 +127,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="assembleInstruction.cpp" />
+    <ClCompile Include="labelsFind.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="writeMachineCodeToFile.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="assembleInstruction.h" />
+    <ClInclude Include="labelsFind.h" />
+    <ClInclude Include="writeMachineCodeToFile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
